@@ -16,8 +16,8 @@
         height: 25px;
         text-align: center;
         border: 1px solid gray;
-        margin-bottom: 12px;
-        padding-top: 12px;
+        padding-bottom: 6px;
+        padding-top: 6px;
         display: inline-block;
         /* float: left; */
       }
@@ -26,11 +26,19 @@
         width: 25px;
         height: 25px;
         display: inline-block;
-        border: 1px solid #fff;
+        border: 1px solid #000;
         cursor: pointer;
+      }
+      .sysPallete {
+        margin-top: 10px;
+        margin-bottom: 10px;
       }
       .pallete {
         width: 100%;
+        margin-bottom: 10px;
+      }
+      .file {
+        margin-bottom: 10px;
       }
       .main {
         margin-left: 5%;
@@ -42,318 +50,336 @@
       .editor {
         overflow: auto;
         height: 320px;
+        margin-bottom: 20px;
+      }
+      .canvasTool {
+        display: inline-block;
+      }
+      .btn {
+        font-style: normal;
+        font-size: 15px;
+        color: #3c3c3c;
+        margin-top: 2px;
+        margin-bottom: 2px;
       }
     </style>
   </head>
   <body>
     <div class="main">
       <div name="tiles">
-        <canvas id="tile4x4" class="canvas"></canvas>
-        <canvas id="tile4x8" class="canvas"></canvas>
+        <div class="canvasTool">
+          <div>
+            <button class="btn">clear</button>
+            <button class="btn" onclick="exportPng('tile2x2')">
+              export png
+            </button>
+          </div>
+          <canvas id="tile2x2" class="canvas"></canvas>
+        </div>
+
+        <div class="canvasTool" style="margin-left: 10px">
+          <div>
+            <button class="btn">clear</button>
+            <button class="btn" onclick="exportPng('tile2x4')">
+              export png
+            </button>
+          </div>
+          <canvas id="tile2x4" class="canvas"></canvas>
+        </div>
+        <div class="canvasTool" style="margin-left: 10px">
+          <div>
+            <button class="btn">clear</button>
+            <button class="btn" onclick="exportPng('tile20x4')">
+              export png
+            </button>
+          </div>
+          <canvas id="tile20x4" class="canvas"></canvas>
+        </div>
       </div>
-      <div name="palette">
-        <div class="tool" style="background-color: rgb(252, 252, 252)">0</div>
+      <div class="sysPallete">
+        <div class="tool" style="background-color: rgb(0, 0, 0, 0)">0</div>
         <div class="tool" style="background-color: rgb(188, 188, 188)">1</div>
         <div class="tool" style="background-color: rgb(124, 124, 124)">2</div>
         <div class="tool" style="background-color: rgb(0, 0, 0)">3</div>
       </div>
-      <div>
-        <label for="nesfile">Upload</label>
+      <div class="file">
+        <input
+          type="checkbox"
+          id="showLine"
+          name="showLine"
+          onchange="onChange()"
+        />
+        <label for="showLine">tile 显示line</label>
+        <!-- <input type="checkbox" id="showLine" value="true">tile 显示line</input> -->
+        <label for="nesfile">Upload nes</label>
         <input type="file" id="nesfile" name="nesfile" onchange="nesFile()" />
       </div>
-      <div>
-        <div class="pallete ng-scope">
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(124, 124, 124)"
-          ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 0, 252)"
-          ></div>
+      <div class="pallete ng-scope">
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(124, 124, 124)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 0, 188)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 252)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(68, 40, 188)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 188)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(148, 0, 132)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(68, 40, 188)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(168, 0, 32)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(148, 0, 132)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(168, 16, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(168, 0, 32)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(136, 20, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(168, 16, 0)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(80, 48, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(136, 20, 0)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 120, 0)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(80, 48, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 104, 0)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 120, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 88, 0)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 104, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 64, 88)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 88, 0)"></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 64, 88)"></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(188, 188, 188)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 120, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(188, 188, 188)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 88, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 120, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(104, 68, 252)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 88, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(216, 0, 204)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(104, 68, 252)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(228, 0, 88)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(216, 0, 204)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 56, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(228, 0, 88)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(228, 92, 16)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 56, 0)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(172, 124, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(228, 92, 16)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 184, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(172, 124, 0)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 168, 0)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 184, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 168, 68)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 168, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 136, 136)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 168, 68)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 136, 136)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 248, 248)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(60, 188, 252)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 248, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(104, 136, 252)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(60, 188, 252)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(152, 120, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(104, 136, 252)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 120, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(152, 120, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 88, 152)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 120, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 120, 88)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 88, 152)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(252, 160, 68)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 120, 88)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 184, 0)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(252, 160, 68)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(184, 248, 24)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 184, 0)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(88, 216, 84)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(184, 248, 24)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(88, 248, 152)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(88, 216, 84)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 232, 216)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(88, 248, 152)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(120, 120, 120)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 232, 216)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(120, 120, 120)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(252, 252, 252)"
-          ></div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(164, 228, 252)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(252, 252, 252)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(184, 184, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(164, 228, 252)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(216, 184, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(184, 184, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 184, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(216, 184, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 164, 192)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 184, 248)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(240, 208, 176)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 164, 192)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(252, 224, 168)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(240, 208, 176)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 216, 120)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(252, 224, 168)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(216, 248, 120)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 216, 120)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(184, 248, 184)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(216, 248, 120)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(184, 248, 216)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(184, 248, 184)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(0, 252, 252)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(184, 248, 216)"
+        ></div>
 
-          <div
-            class="sw ng-scope"
-            style="background-color: rgb(248, 216, 248)"
-          ></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(0, 252, 252)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+        <div
+          class="sw ng-scope"
+          style="background-color: rgb(248, 216, 248)"
+        ></div>
 
-          <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
-        </div>
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
+
+        <div class="sw ng-scope" style="background-color: rgb(0, 0, 0)"></div>
       </div>
+
       <div class="editor" id="editorDiv">
         <canvas id="editor" class="canvas"></canvas>
       </div>
