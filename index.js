@@ -30,7 +30,29 @@ let palette = [
   "rgb(124, 124, 124)",
   "rgb(0, 0, 0)",
 ]
-var sysPallete = [
+
+let palette8 = [
+  "rgb(0, 0, 0,0)",
+  "rgb(188, 188, 188)",
+  "rgb(124, 124, 124)",
+  "rgb(0, 0, 0)",
+]
+
+let palette20 = [
+  "rgb(0, 0, 0,0)",
+  "rgb(188, 188, 188)",
+  "rgb(124, 124, 124)",
+  "rgb(0, 0, 0)",
+]
+
+let paletteRom = [
+  "rgb(0, 0, 0,0)",
+  "rgb(188, 188, 188)",
+  "rgb(124, 124, 124)",
+  "rgb(0, 0, 0)",
+]
+
+var sysPalette = [
   "rgb(124, 124, 124)",
   "rgb(  0,   0, 252)",
   "rgb(  0,   0, 188)",
@@ -95,6 +117,7 @@ var sysPallete = [
   "rgb(248, 216, 248)",
   "rgb(  0,   0,   0)",
   "rgb(  0,   0,   0)",
+  "rgb(  0,   0,   0,0)",
 ]
 
 function nesFile() {
@@ -126,6 +149,19 @@ function init() {
   for (let i = 0; i < 80; i++) {
     tile3.push(null)
   }
+
+  let sPalette = document.getElementById("sysPalette")
+  let str = ""
+  for (let i = 0; i < sysPalette.length; i++) {
+    str +=
+      '<div class="sw ng-scope" onclick="selectPalette(' +
+      i +
+      ')"' +
+      ' style="background-color:' +
+      sysPalette[i].replace(";", "") +
+      '"></div>'
+  }
+  sPalette.innerHTML = str
 
   let canvas = document.getElementById("editor")
   //   canvas.width = 126 * 5;
@@ -260,7 +296,7 @@ function drawTile8() {
   }
   for (let i = 0; i < tile8.length; i++) {
     if (tile8[i] != null || tile8[i] != undefined)
-      tile8[i].drawData(ctx8, (i % 2) * 40, parseInt(i / 2) * 40, palette, 5)
+      tile8[i].drawData(ctx8, (i % 2) * 40, parseInt(i / 2) * 40, palette8, 5)
   }
 }
 
@@ -287,7 +323,7 @@ function drawTile16() {
 
   for (let i = 0; i < tile3.length; i++) {
     if (tile3[i] != null || tile3[i] != undefined)
-      tile3[i].drawData(ctx16, (i % 20) * 40, parseInt(i / 20) * 40, palette, 5)
+      tile3[i].drawData(ctx16, (i % 20) * 40, parseInt(i / 20) * 40, palette20, 5)
   }
 }
 
@@ -342,10 +378,11 @@ function readNesRom(rom) {
   }
   prgCount = rom[4]
   chrCount = rom[5]
+  console.log("rom size: ", rom.length)
+  console.log("trainer: ", trainer)
   console.log("Mapper: ", mapper)
   console.log("prgCount: ", prgCount)
   console.log("chrCount: ", chrCount)
-  // console.log(prgCount,chrCount)
   chrData = rom.slice(headCount + prgSzie * prgCount + trainerOffset)
   //   console.log(chrData);
 
@@ -392,25 +429,27 @@ function readNesRom(rom) {
     (sprietCount / rowNum) * perSpriteSize +
     spriteYOffset * (sprietCount / rowNum) +
     perSpriteSize
-  let ctx = canvas.getContext("2d")
+  // let ctx = canvas.getContext("2d")
   console.log(canvas.width)
   console.log("rowNum", rowNum)
 
-  printTitle(rowNum, ctx)
+  printTitle(rowNum)
 }
 
-function printTitle(rowNum, ctx) {
+//绘制nes rom tiles
+function printTitle(rowNum) {
+  let canvas = document.getElementById("editor")
+  let ctx = canvas.getContext("2d")
   for (let i = 0; i < tiles.length; i++) {
     let yoffset = parseInt(i / rowNum)
     tiles[i].drawData(
       ctx,
       (i % rowNum) * perSpriteSize + (i % rowNum) * 2,
       yoffset * perSpriteSize + yoffset * spriteYOffset,
-      palette,
+      paletteRom,
       5
     )
   }
-  // tiles[0].drawData(ctx,0,0,palette,5)
 }
 
 //导出图片
@@ -431,6 +470,61 @@ function exportPng(id) {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+function clearImg(id) {
+  if (id === "tile2x2") {
+    for (let i = 0; i < tile4.length; i++) {
+      tile4[i] = null
+    }
+    drawTile4()
+  } else if (id === "tile2x4") {
+    for (let i = 0; i < tile8.length; i++) {
+      tile8[i] = null
+    }
+    drawTile8()
+  } else if (id === "tile20x4") {
+    for (let i = 0; i < tile3.length; i++) {
+      tile3[i] = null
+    }
+    drawTile16()
+  }
+}
+
+function selectPalette(index) {
+  curSelectColor = sysPalette[index]
+}
+
+function paletteClick(node,id, index) {
+  if (id === "tile2x2") {
+    if (curSelectColor !== null) {
+      palette[index] = curSelectColor
+      // background-colo:rgb(124, 124, 124);background: rgb(124, 124, 124);
+      node.setAttribute('style', 'background-color:'+curSelectColor);
+    }
+    drawTile4()
+  } else if (id === "tile2x4") {
+    if (curSelectColor !== null) {
+      palette8[index] = curSelectColor
+      // background-colo:rgb(124, 124, 124);background: rgb(124, 124, 124);
+      node.setAttribute('style', 'background-color:'+curSelectColor);
+    }
+    drawTile8()
+  } else if (id === "tile20x4") {
+    if (curSelectColor !== null) {
+      palette20[index] = curSelectColor
+      // background-colo:rgb(124, 124, 124);background: rgb(124, 124, 124);
+      node.setAttribute('style', 'background-color:'+curSelectColor);
+    }
+    drawTile16()
+  } else if (id === "rom") {
+    if (curSelectColor !== null) {
+      paletteRom[index] = curSelectColor
+      // background-colo:rgb(124, 124, 124);background: rgb(124, 124, 124);
+      node.setAttribute('style', 'background-color:'+curSelectColor);
+    }
+    printTitle(rowNum) 
+  }
 }
 
 class Tile {
