@@ -12,7 +12,7 @@ let mapper = 0 //卡带的类型
 let trainer
 
 let chrData //图案数据
-let tiles = []
+let tiles = []  //所有图块数据
 let perSpriteSize = 40
 let spriteXOffset = 2
 let spriteYOffset = 2
@@ -404,7 +404,7 @@ function readNesRom(rom) {
   console.log("chrCount: ", chrCount)
   chrData = rom.slice(headCount + prgSzie * prgCount + trainerOffset)
   //   console.log(chrData);
-
+  tiles=[]
   for (let i = 0; i < chrData.length; i += spriteSize) {
     let temp = []
     let tile = new Tile()
