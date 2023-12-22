@@ -23,6 +23,9 @@ let curSelectTile = null
 let tile4 = [null, null, null, null] //2x2
 let tile8 = [null, null, null, null, null, null, null, null] //2x4
 let tile3 = [] //20*4
+//每个tile增加
+let horizontally=0
+let vertically=0
 
 let palette = [
   "rgb(0, 0, 0,0)",
@@ -409,11 +412,11 @@ function readNesRom(rom) {
     let temp = []
     let tile = new Tile()
     for (let a = 0; a < 8; a++) {
-      //每个图块16个字节 一个字节表示8个像素  高8个字节与低8个字节组成颜色  颜色最多只有4种
+      //每个图块16个字节 一个字节表示8个像素  高8个字节与低8个字节组成颜色  颜色最多只有4种因为只有2位
       for (let b = 7; b >= 0; b--) {
         let color1 = chrData[i + a]
         let color2 = chrData[i + a + 8]
-        let color = (((color2 >>> b) & 1) << 1) | ((color1 >>> b) & 1)
+        let color = (((color2 >>> b) & 1) << 1) | ((color1 >>> b) & 1)  //高位与低位拼在一起
         temp.push(color)
       }
     }
@@ -557,6 +560,8 @@ class Tile {
   constructor() {
     //一个64大小的数组
     this.data = []
+    this.horizontal=0
+    this.vertical=0
   }
   printData() {
     //显示图像的值
@@ -589,7 +594,13 @@ class Tile {
         size
       )
     }
-  }
+  },
+  setHorizontal(flag){  //设置水平翻转
+
+  },
+  setVertical(flag){  //设置垂直翻转
+
+  },
 }
 
 init()
