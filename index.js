@@ -594,13 +594,21 @@ class Tile {
         size
       )
     }
-  },
-  setHorizontal(flag){  //设置水平翻转
-
-  },
-  setVertical(flag){  //设置垂直翻转
-
-  },
+  }
+  setHorizontal(flag){  //设置水平翻转 0不翻转 1翻转 
+    this.horizontal=flag
+    
+  }
+  setVertical(flag){  //设置垂直翻转 0不翻转 1翻转 
+    this.vertical=flag
+    for(let i=0;i<this.data.length; i += 8){
+      for (let y = 0; y < 4; y++){
+          let temp=this.data[i]
+          this.data[i]=this.data[i+(7-y)]
+          this.data[i+(7-y)] =temp
+      }
+    }
+  }
 }
 
 init()

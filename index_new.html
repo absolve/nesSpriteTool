@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"
+    />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>nes Sprite Tool</title>
+    <style>
+      html,body {
+        margin: 0;
+            padding: 0;
+            height: 100%;
+      }
+      .app {
+        width: 100%;
+        height: 100%;
+      }
+
+      .left {
+        width: 30%;
+        height: 100%;
+        margin: 10px 10px;
+        border: 1px solid rgb(0, 0, 0);
+      }
+      .content {
+        height: 100%;
+      }
+      .paletteDiv {
+        display: inline-block;
+        margin-top: 10px;
+        margin-right: 10px;
+      }
+      .tool {
+        cursor: pointer;
+        background-color: #fff;
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        border: 1px solid gray;
+        padding-bottom: 6px;
+        padding-top: 6px;
+        display: inline-block;
+        /* float: left; */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="left">
+        <div>
+          <div class="paletteDiv">
+            <label>nes rom</label>
+            <div
+              class="tool"
+              onclick="paletteClick(this,'tile2x2','0')"
+              style="background-color: rgb(0, 0, 0, 0)"
+            >
+              0
+            </div>
+            <div
+              class="tool"
+              onclick="paletteClick(this,'tile2x2','1')"
+              style="background-color: rgb(188, 188, 188)"
+            >
+              1
+            </div>
+            <div
+              class="tool"
+              onclick="paletteClick(this,'tile2x2','2')"
+              style="background-color: rgb(124, 124, 124)"
+            >
+              2
+            </div>
+            <div
+              class="tool"
+              onclick="paletteClick(this,'tile2x2','3')"
+              style="background-color: rgb(0, 0, 0)"
+            >
+              3
+            </div>
+          </div>
+        </div>
+        <div class="palette ng-scope" id="sysPalette"></div>
+      </div>
+      <div class="content">
+
+
+      </div>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
