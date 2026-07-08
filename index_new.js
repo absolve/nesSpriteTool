@@ -121,6 +121,7 @@ function nesFile() {
 
   let nesRom
   let file = files[0]
+  
   let reader = new FileReader()
   reader.onloadend = function (evt) {
     if (evt.target.readyState == FileReader.DONE) {
@@ -346,6 +347,71 @@ function exportPng(id) {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+// 导出当前 tiles 数据为 JSON
+function exportTiles() {
+  if (!tiles || tiles.length === 0) {
+    alert('没有可导出的 tiles')
+    return
+  }
+  let data = {
+    tiles: tiles.map((t) => ({ data: t.data })),
+    tileSlots: tileSlots.map((s) =>
+      s && s.tile ? { tileIndex: tiles.indexOf(s.tile), horizontal: !!s.horizontal, vertical: !!s.vertical } : null
+    ),
+    palette: palette,
+    paletteRom: paletteRom,
+  }
+  let blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
+  let a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'nes_tiles.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(a.href)
+}
+
+// 从本地 JSON 文件导入 tiles 数据
+function importTilesFile() {
+  let input = document.getElementById('importTilesFile')
+  if (!input || input.files.length === 0) return
+  let file = input.files[0]
+  let reader = new FileReader()
+  reader.onload = function (evt) {
+    try {
+      let obj = JSON.parse(evt.target.result)
+      if (obj.tiles && Array.isArray(obj.tiles)) {
+        tiles = obj.tiles.map((tdata) => {
+          let tile = new Tile()
+          tile.data = Array.isArray(tdata.data) ? tdata.data.slice() : []
+          return tile
+        })
+      }
+      if (obj.tileSlots && Array.isArray(obj.tileSlots)) {
+        tileSlots = obj.tileSlots.map((s) => {
+          if (!s) return null
+          let t = tiles[s.tileIndex]
+          if (!t) return null
+          return { tile: t, horizontal: !!s.horizontal, vertical: !!s.vertical }
+        })
+      }
+      if (obj.palette && Array.isArray(obj.palette)) palette = obj.palette
+      if (obj.paletteRom && Array.isArray(obj.paletteRom)) paletteRom = obj.paletteRom
+      selectedTileIndex = -1
+      selectedEditorTileIndex = -1
+      curSelectTile = null
+      drawTileScreen()
+      printTitle(rowNum)
+      alert('导入成功')
+    } catch (e) {
+      console.error(e)
+      alert('无效的 tiles JSON 文件')
+    }
+  }
+  reader.readAsText(file)
+  input.value = ''
 }
 
 function clearImg(id) {

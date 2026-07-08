@@ -215,7 +215,10 @@
         />
         <label for="showLine">tile 显示line</label>
         <label for="nesfile">Upload nes</label>
-        <input type="file" id="nesfile" name="nesfile" onchange="nesFile()" />
+        <input type="file" id="nesfile" name="nesfile" accept=".nes" onchange="nesFile()" />
+        <button class="btn" onclick="exportTiles()">Export tiles</button>
+        <button class="btn" onclick="document.getElementById('importTilesFile').click()">Import tiles</button>
+        <input type="file" id="importTilesFile" accept=".json" style="display:none" onchange="importTilesFile()" />
       </div>
 
       <div class="palette ng-scope" id="sysPalette"></div>
