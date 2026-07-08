@@ -20,9 +20,11 @@ let rowNum = 0 //图案显示的行个数
 let showLine = true //显示分割线
 let curSelectColor = null //当前选中的颜色
 let curSelectTile = null
+let curSelectTileIsRom = false // true: 来自 ROM/editor 的选择，false: 来自已放置格子的复制
 let tileSlots = []
 let selectedTileIndex = -1
 let selectedEditorTileIndex = -1
+let selectedSourceIndex = -1 // 在没有选中 ROM 时，记录被选中的非空白格子索引（作为复制源）
 let screenColumns = 32
 let screenRows = 30
 let tileCellSize = 40
@@ -166,7 +168,9 @@ function init() {
     let index = rowX + rowY
     if (rowX !== rowNum && index < tiles.length) {
       curSelectTile = tiles[index]
+      curSelectTileIsRom = true
       selectedEditorTileIndex = index
+      selectedSourceIndex = -1
       printTitle(rowNum)
     }
   })
@@ -184,11 +188,42 @@ function init() {
     let index = rowY * screenColumns + rowX
     if (index < tileSlots.length) {
       selectedTileIndex = index
+      let slot = tileSlots[index]
+      // 有选中 tile（来源区分：来自 ROM/editor 则可覆盖；来自复制/源选择则只允许粘贴到空白格）
       if (curSelectTile != null) {
-        tileSlots[index] = {
-          tile: curSelectTile,
-          horizontal: false,
-          vertical: false,
+        // 使用 curSelectTile 粘贴时，取消任何源选择
+        selectedSourceIndex = -1
+        if (curSelectTileIsRom) {
+          tileSlots[index] = {
+            tile: curSelectTile,
+            horizontal: false,
+            vertical: false,
+          }
+        } else {
+          if (!slot) {
+            tileSlots[index] = {
+              tile: curSelectTile,
+              horizontal: false,
+              vertical: false,
+            }
+          } else {
+            alert('目标格子不是空白，不能粘贴')
+          }
+        }
+      } else {
+        // 没有 curSelectTile 时：
+        // - 点击非空白格子：选中该格子作为复制源（selectedSourceIndex）
+        // - 点击空白格子：如果之前选中了一个源且该源非空，则把源复制到此空格
+        if (slot && slot.tile) {
+          selectedSourceIndex = index
+        } else {
+          if (selectedSourceIndex >= 0 && tileSlots[selectedSourceIndex] && tileSlots[selectedSourceIndex].tile) {
+            let src = tileSlots[selectedSourceIndex]
+            let copied = new Tile()
+            copied.data = src.tile.data.slice()
+            tileSlots[index] = { tile: copied, horizontal: false, vertical: false }
+            selectedSourceIndex = -1
+          }
         }
       }
       drawTileScreen()
@@ -233,6 +268,16 @@ function drawTileScreen() {
         slot.vertical
       )
     }
+    // 源选中（非 ROM 来源的复制源）高亮
+    if (selectedSourceIndex === i) {
+      ctx.fillStyle = "rgba(34,197,94,0.16)"
+      ctx.fillRect(
+        (i % screenColumns) * tileCellSize + 1,
+        parseInt(i / screenColumns) * tileCellSize + 1,
+        tileCellSize - 2,
+        tileCellSize - 2
+      )
+    }
     if (selectedTileIndex === i) {
       ctx.fillStyle = "rgba(79, 142, 247, 0.16)"
       ctx.fillRect(
@@ -264,6 +309,7 @@ function readNesRom(rom) {
     return
   }
   curSelectTile = null
+  curSelectTileIsRom = false
   selectedEditorTileIndex = -1
 
   flag06 = rom[6]
@@ -402,6 +448,7 @@ function importTilesFile() {
       selectedTileIndex = -1
       selectedEditorTileIndex = -1
       curSelectTile = null
+      curSelectTileIsRom = false
       drawTileScreen()
       printTitle(rowNum)
       alert('导入成功')
@@ -420,6 +467,38 @@ function clearImg(id) {
     selectedTileIndex = -1
     drawTileScreen()
   }
+}
+
+// 清空当前选中的 tile：优先清空主画面选中格子，其次清空 editor 中选中的 ROM tile
+function clearSelectedTile() {
+  if (selectedTileIndex >= 0) {
+    tileSlots[selectedTileIndex] = null
+    selectedTileIndex = -1
+    drawTileScreen()
+    return
+  }
+  if (selectedEditorTileIndex >= 0 && tiles[selectedEditorTileIndex]) {
+    tiles[selectedEditorTileIndex].data = Array(64).fill(0)
+    curSelectTile = tiles[selectedEditorTileIndex]
+    curSelectTileIsRom = true
+    selectedEditorTileIndex = -1
+    printTitle(rowNum)
+    drawTileScreen()
+    return
+  }
+  alert('没有选中的 tile')
+}
+
+// 取消选中 editor 中的 ROM tile（仅取消选择，不修改 tile 数据）
+function deselectEditorTile() {
+  if (selectedEditorTileIndex >= 0) {
+    selectedEditorTileIndex = -1
+    curSelectTile = null
+    curSelectTileIsRom = false
+    printTitle(rowNum)
+    return
+  }
+  alert('当前没有选中的 ROM tile')
 }
 
 function toggleSelectedTileFlip(direction) {
