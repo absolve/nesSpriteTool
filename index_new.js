@@ -329,11 +329,11 @@ function readNesRom(rom) {
   for (let i = 0; i < chrData.length; i += spriteSize) {
     let temp = []
     let tile = new Tile()
-    for (let a = 0; a < 8; a++) {
-      for (let b = 7; b >= 0; b--) {
-        let color1 = chrData[i + a]
-        let color2 = chrData[i + a + 8]
-        let color = (((color2 >>> b) & 1) << 1) | ((color1 >>> b) & 1)
+    for (let row = 0; row < 8; row++) {
+      let color1 = chrData[i + row]
+      let color2 = chrData[i + row + 8]
+      for (let bit = 0; bit < 8; bit++) {
+        let color = (((color2 >> bit) & 1) << 1) | ((color1 >> bit) & 1)
         temp.push(color)
       }
     }
