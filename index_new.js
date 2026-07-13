@@ -235,48 +235,56 @@ function init() {
        *    - curSelectTileIsRom === false: 来自已放置格子的复制，只允许放入空格
        */
       if (curSelectTile != null) {
-        selectedSourceIndex = -1          // 清除任何复制源选择
-        if (curSelectTileIsRom) {
-          // 来自 ROM：直接放置/覆盖
-          tileSlots[index] = {
-            tile: curSelectTile,
-            horizontal: false,
-            vertical: false,
-          }
-        } else {
-          // 来自格子复制：仅当目标为空时才可放置
-          if (!slot) {
+          selectedSourceIndex = -1          // 清除任何复制源选择
+          if (curSelectTileIsRom) {
+            // 来自 ROM：直接放置/覆盖
             tileSlots[index] = {
               tile: curSelectTile,
               horizontal: false,
               vertical: false,
+              palette: palette.slice()       // 分配独立的调色板副本
             }
           } else {
-            alert('目标格子不是空白，不能粘贴')
+            // 来自格子复制：仅当目标为空时才可放置
+            if (!slot) {
+              tileSlots[index] = {
+                tile: curSelectTile,
+                horizontal: false,
+                vertical: false,
+                palette: palette.slice()       // 分配独立的调色板副本
+              }
+            } else {
+              alert('目标格子不是空白，不能粘贴')
+            }
           }
-        }
-      } else {
-        /** ---- 情况 B：没有选中的 tile ----
-         *  - 点击非空格子 → 选中它作为复制源（selectedSourceIndex）
-         *  - 点击空格子且已有复制源 → 将源 tile 的副本粘贴到此处
-         */
-        if (slot && slot.tile) {
-          // 点击已有 tile 的格子 → 设为复制源
-          selectedSourceIndex = index
         } else {
-          // 点击空格子 → 如果有复制源，则粘贴
-          if (selectedSourceIndex >= 0 &&
-              tileSlots[selectedSourceIndex] &&
-              tileSlots[selectedSourceIndex].tile) {
-            let src = tileSlots[selectedSourceIndex]
-            let copied = new Tile()
-            copied.data = src.tile.data.slice()  // 深拷贝 tile 数据
-            tileSlots[index] = { tile: copied, horizontal: false, vertical: false }
-            selectedSourceIndex = -1
+          /** ---- 情况 B：没有选中的 tile ----
+           *  - 点击非空格子 → 选中它作为复制源（selectedSourceIndex）
+           *  - 点击空格子且已有复制源 → 将源 tile 的副本粘贴到此处
+           */
+          if (slot && slot.tile) {
+            // 点击已有 tile 的格子 → 设为复制源
+            selectedSourceIndex = index
+          } else {
+            // 点击空格子 → 如果有复制源，则粘贴
+            if (selectedSourceIndex >= 0 &&
+                tileSlots[selectedSourceIndex] &&
+                tileSlots[selectedSourceIndex].tile) {
+              let src = tileSlots[selectedSourceIndex]
+              let copied = new Tile()
+              copied.data = src.tile.data.slice()  // 深拷贝 tile 数据
+              tileSlots[index] = { 
+                tile: copied, 
+                horizontal: src.horizontal, 
+                vertical: src.vertical,
+                palette: src.palette ? src.palette.slice() : palette.slice()  // 复制源格子的调色板
+              }
+              selectedSourceIndex = -1
+            }
           }
         }
-      }
       drawTileScreen()   // 重绘主编辑区
+      updatePaletteUI()  // 更新调色板 UI 显示
     }
   })
 
@@ -322,7 +330,7 @@ function drawTileScreen() {
         ctx,
         (i % screenColumns) * tileCellSize,          // x 坐标
         parseInt(i / screenColumns) * tileCellSize,  // y 坐标
-        palette,       // 使用 tile 调色板
+        slot.palette || palette,       // 使用格子自己的调色板，没有则使用全局调色板
         5,             // 每个像素放大 5 倍（8×8 tile → 40×40 格子）
         slot.horizontal,  // 是否水平翻转
         slot.vertical     // 是否垂直翻转
@@ -517,7 +525,8 @@ function exportTiles() {
       s && s.tile ? {
         tileIndex: tiles.indexOf(s.tile),     // 通过索引引用 tile，避免重复
         horizontal: !!s.horizontal,
-        vertical: !!s.vertical
+        vertical: !!s.vertical,
+        palette: s.palette ? s.palette.slice() : palette.slice()  // 保存格子的独立调色板
       } : null
     ),
     palette: palette,
@@ -561,7 +570,12 @@ function importTilesFile() {
           if (!s) return null
           let t = tiles[s.tileIndex]
           if (!t) return null
-          return { tile: t, horizontal: !!s.horizontal, vertical: !!s.vertical }
+          return { 
+            tile: t, 
+            horizontal: !!s.horizontal, 
+            vertical: !!s.vertical,
+            palette: s.palette && Array.isArray(s.palette) ? s.palette.slice() : palette.slice()  // 恢复格子的独立调色板
+          }
         })
       }
 
@@ -597,6 +611,7 @@ function clearImg(id) {
     tileSlots = Array.from({ length: screenColumns * screenRows }, () => null)
     selectedTileIndex = -1
     drawTileScreen()
+    updatePaletteUI()
   }
 }
 
@@ -611,6 +626,7 @@ function clearSelectedTile() {
     tileSlots[selectedTileIndex] = null
     selectedTileIndex = -1
     drawTileScreen()
+    updatePaletteUI()
     return
   }
   if (selectedEditorTileIndex >= 0 && tiles[selectedEditorTileIndex]) {
@@ -656,6 +672,7 @@ function toggleSelectedTileFlip(direction) {
     slot.vertical = !slot.vertical
   }
   drawTileScreen()
+  updatePaletteUI()
 }
 
 // ============================================================
@@ -668,6 +685,35 @@ function selectPalette(index) {
 }
 
 // ============================================================
+// 更新调色板 UI 显示
+// 根据选中格子的调色板或全局调色板更新 HTML 中的色块显示
+// ============================================================
+function updatePaletteUI() {
+  let statusEl = document.getElementById('paletteStatus')
+  let slot = selectedTileIndex >= 0 ? tileSlots[selectedTileIndex] : null
+  
+  if (slot && slot.palette) {
+    // 显示选中格子的调色板
+    statusEl.textContent = '编辑格子 #' + selectedTileIndex + ' 的调色板'
+    for (let i = 0; i < 4; i++) {
+      let btn = document.querySelector('.paletteDiv:first-child .tool:nth-child(' + (i + 2) + ')')
+      if (btn) {
+        btn.setAttribute('style', 'background-color:' + slot.palette[i])
+      }
+    }
+  } else {
+    // 显示全局调色板
+    statusEl.textContent = '编辑全局调色板'
+    for (let i = 0; i < 4; i++) {
+      let btn = document.querySelector('.paletteDiv:first-child .tool:nth-child(' + (i + 2) + ')')
+      if (btn) {
+        btn.setAttribute('style', 'background-color:' + palette[i])
+      }
+    }
+  }
+}
+
+// ============================================================
 // 调色板点击事件处理
 // 将当前选中的颜色（curSelectColor）应用到指定的调色板位置
 // @param {HTMLElement} node - 被点击的调色板 UI 元素
@@ -677,7 +723,15 @@ function selectPalette(index) {
 function paletteClick(node, id, index) {
   if (id === "tile") {
     if (curSelectColor !== null) {
-      palette[index] = curSelectColor
+      if (selectedTileIndex >= 0 && tileSlots[selectedTileIndex]) {
+        // 如果有选中的格子，修改该格子的调色板
+        let slot = tileSlots[selectedTileIndex]
+        if (!slot.palette) slot.palette = palette.slice()
+        slot.palette[index] = curSelectColor
+      } else {
+        // 没有选中格子，修改全局调色板
+        palette[index] = curSelectColor
+      }
       node.setAttribute("style", "background-color:" + curSelectColor)
     }
     drawTileScreen()
