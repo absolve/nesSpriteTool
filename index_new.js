@@ -1,3 +1,4 @@
+
 // ============================================================
 // NES ROM 文件头解析相关常量
 // ============================================================
@@ -185,9 +186,24 @@ function init() {
       ')"' +
       ' style="background-color:' +
       sysPalette[i].replace(";", "") +
-      '"></div>'
+      '" data-color="' + sysPalette[i] + '"></div>'
   }
   sPalette.innerHTML = str
+
+  let swElements = document.querySelectorAll('.sw')
+  swElements.forEach(el => {
+    el.addEventListener('mouseenter', function (e) {
+      let color = this.getAttribute('data-color') || window.getComputedStyle(this).backgroundColor
+      let hex = rgbStringToHex(color)
+      showTooltip(e, hex.toUpperCase())
+    })
+    el.addEventListener('mousemove', function (e) {
+      let color = this.getAttribute('data-color') || window.getComputedStyle(this).backgroundColor
+      let hex = rgbStringToHex(color)
+      showTooltip(e, hex.toUpperCase())
+    })
+    el.addEventListener('mouseleave', hideTooltip)
+  })
 
   // --- 4. 初始化 ROM tile 预览区（editor 画布） ---
   let canvas = document.getElementById("editor")
@@ -236,9 +252,18 @@ function init() {
        *    - curSelectTileIsRom === false: 来自已放置格子的复制，只允许放入空格
        */
       if (curSelectTile != null) {
-          selectedSourceIndex = -1          // 清除任何复制源选择
-          if (curSelectTileIsRom) {
-            // 来自 ROM：直接放置/覆盖
+        selectedSourceIndex = -1          // 清除任何复制源选择
+        if (curSelectTileIsRom) {
+          // 来自 ROM：直接放置/覆盖
+          tileSlots[index] = {
+            tile: curSelectTile,
+            horizontal: false,
+            vertical: false,
+            palette: palette.slice()       // 分配独立的调色板副本
+          }
+        } else {
+          // 来自格子复制：仅当目标为空时才可放置
+          if (!slot) {
             tileSlots[index] = {
               tile: curSelectTile,
               horizontal: false,
@@ -246,50 +271,56 @@ function init() {
               palette: palette.slice()       // 分配独立的调色板副本
             }
           } else {
-            // 来自格子复制：仅当目标为空时才可放置
-            if (!slot) {
-              tileSlots[index] = {
-                tile: curSelectTile,
-                horizontal: false,
-                vertical: false,
-                palette: palette.slice()       // 分配独立的调色板副本
-              }
-            } else {
-              alert('目标格子不是空白，不能粘贴')
-            }
-          }
-        } else {
-          /** ---- 情况 B：没有选中的 tile ----
-           *  - 点击非空格子 → 选中它作为复制源（selectedSourceIndex）
-           *  - 点击空格子且已有复制源 → 将源 tile 的副本粘贴到此处
-           */
-          if (slot && slot.tile) {
-            // 点击已有 tile 的格子 → 设为复制源
-            selectedSourceIndex = index
-          } else {
-            // 点击空格子 → 如果有复制源，则粘贴
-            if (selectedSourceIndex >= 0 &&
-                tileSlots[selectedSourceIndex] &&
-                tileSlots[selectedSourceIndex].tile) {
-              let src = tileSlots[selectedSourceIndex]
-              let copied = new Tile()
-              copied.data = src.tile.data.slice()  // 深拷贝 tile 数据
-              tileSlots[index] = { 
-                tile: copied, 
-                horizontal: src.horizontal, 
-                vertical: src.vertical,
-                palette: src.palette ? src.palette.slice() : palette.slice()  // 复制源格子的调色板
-              }
-              selectedSourceIndex = -1
-            }
+            alert('目标格子不是空白，不能粘贴')
           }
         }
+      } else {
+        /** ---- 情况 B：没有选中的 tile ----
+         *  - 点击非空格子 → 选中它作为复制源（selectedSourceIndex）
+         *  - 点击空格子且已有复制源 → 将源 tile 的副本粘贴到此处
+         */
+        if (slot && slot.tile) {
+          // 点击已有 tile 的格子 → 设为复制源
+          selectedSourceIndex = index
+        } else {
+          // 点击空格子 → 如果有复制源，则粘贴
+          if (selectedSourceIndex >= 0 &&
+            tileSlots[selectedSourceIndex] &&
+            tileSlots[selectedSourceIndex].tile) {
+            let src = tileSlots[selectedSourceIndex]
+            let copied = new Tile()
+            copied.data = src.tile.data.slice()  // 深拷贝 tile 数据
+            tileSlots[index] = {
+              tile: copied,
+              horizontal: src.horizontal,
+              vertical: src.vertical,
+              palette: src.palette ? src.palette.slice() : palette.slice()  // 复制源格子的调色板
+            }
+            selectedSourceIndex = -1
+          }
+        }
+      }
       drawTileScreen()   // 重绘主编辑区
       updatePaletteUI()  // 更新调色板 UI 显示
     }
   })
 
   drawTileScreen()  // 初始绘制主编辑区（此时为空）
+
+  let toolPaletteElements = document.querySelectorAll('.tool[id^="tilePal"], .tool[id^="romPal"]')
+  toolPaletteElements.forEach(el => {
+    el.addEventListener('mouseenter', function (e) {
+      let color = window.getComputedStyle(this).backgroundColor
+      let hex = rgbStringToHex(color)
+      showTooltip(e, hex.toUpperCase())
+    })
+    el.addEventListener('mousemove', function (e) {
+      let color = window.getComputedStyle(this).backgroundColor
+      let hex = rgbStringToHex(color)
+      showTooltip(e, hex.toUpperCase())
+    })
+    el.addEventListener('mouseleave', hideTooltip)
+  })
 }
 
 // ============================================================
@@ -438,7 +469,7 @@ function readNesRom(rom) {
       let color2 = chrData[i + row + 8]    // 高位平面字节
       for (let bit = 7; bit >= 0; bit--) {
         // 从 MSB（bit 7）到 LSB（bit 0）逐位提取，对应像素从左到右
-        let lowBit  = (color1 >>> bit) & 1    // 低位平面当前位的值
+        let lowBit = (color1 >>> bit) & 1    // 低位平面当前位的值
         let highBit = (color2 >>> bit) & 1    // 高位平面当前位的值
         let color = (highBit << 1) | lowBit   // 组合成 2 位颜色值（0-3）
         temp.push(color)
@@ -472,7 +503,7 @@ function readNesRom(rom) {
 function printTitle(rowNum) {
   let canvas = document.getElementById("editor")
   let ctx = canvas.getContext("2d")
-  
+
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   // 遍历所有 tile，计算每个 tile 在画布上的位置并绘制
@@ -524,8 +555,8 @@ function exportTiles() {
     return
   }
   let data = {
-    tiles: tiles.map((t) => ({ 
-      data: t.data, 
+    tiles: tiles.map((t) => ({
+      data: t.data,
       palette: t.palette ? t.palette.slice() : paletteRom.slice()  // 保存每个 ROM tile 的独立调色板
     })),                            // 所有 tile 的像素数据
     tileSlots: tileSlots.map((s) =>                                          // 主编辑区布局
@@ -578,9 +609,9 @@ function importTilesFile() {
           if (!s) return null
           let t = tiles[s.tileIndex]
           if (!t) return null
-          return { 
-            tile: t, 
-            horizontal: !!s.horizontal, 
+          return {
+            tile: t,
+            horizontal: !!s.horizontal,
             vertical: !!s.vertical,
             palette: s.palette && Array.isArray(s.palette) ? s.palette.slice() : palette.slice()  // 恢复格子的独立调色板
           }
@@ -701,7 +732,7 @@ function selectPalette(index) {
 function updatePaletteUI() {
   let statusEl = document.getElementById('paletteStatus')
   let slot = selectedTileIndex >= 0 ? tileSlots[selectedTileIndex] : null
-  
+
   if (slot && slot.palette) {
     statusEl.textContent = '编辑格子 #' + selectedTileIndex + ' 的调色板'
     for (let i = 0; i < 4; i++) {
@@ -728,7 +759,7 @@ function updatePaletteUI() {
 function updateRomPaletteUI() {
   let statusEl = document.getElementById('romPaletteStatus')
   let tile = selectedEditorTileIndex >= 0 ? tiles[selectedEditorTileIndex] : null
-  
+
   if (tile && tile.palette) {
     statusEl.textContent = '编辑 ROM tile #' + selectedEditorTileIndex + ' 的调色板'
     for (let i = 0; i < 4; i++) {
@@ -840,6 +871,54 @@ class Tile {
   }
 }
 
+function rgbStringToHex(rgbStr) {
+  let match = rgbStr.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i)
+  if (!match) {
+    match = rgbStr.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i)
+  }
+  if (!match) {
+    return '#000000'
+  }
+  let r = parseInt(match[1]).toString(16).padStart(2, '0')
+  let g = parseInt(match[2]).toString(16).padStart(2, '0')
+  let b = parseInt(match[3]).toString(16).padStart(2, '0')
+  return '#' + r + g + b
+}
+
+function showTooltip(e, text) {
+  let tooltip = document.getElementById('colorTooltip')
+  if (!tooltip) {
+    tooltip = document.createElement('div')
+    tooltip.id = 'colorTooltip'
+    tooltip.style.cssText = 'position:fixed;pointer-events:none;background:#1f2937;color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,0.3);'
+    document.body.appendChild(tooltip)
+  }
+  tooltip.textContent = text
+
+  let offsetX = 8
+  let offsetY = -tooltip.offsetHeight - 8
+
+  let x = e.clientX + offsetX
+  let y = e.clientY + offsetY
+
+  if (x + tooltip.offsetWidth > window.innerWidth) {
+    x = e.clientX - tooltip.offsetWidth - offsetX
+  }
+  if (y < 0) {
+    y = e.clientY + offsetY + tooltip.offsetHeight + 16
+  }
+
+  tooltip.style.left = x + 'px'
+  tooltip.style.top = y + 'px'
+  tooltip.style.display = 'block'
+}
+
+function hideTooltip() {
+  let tooltip = document.getElementById('colorTooltip')
+  if (tooltip) {
+    tooltip.style.display = 'none'
+  }
+}
 // ============================================================
 // 页面加载后自动执行初始化
 // ============================================================
