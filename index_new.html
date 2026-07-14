@@ -172,6 +172,7 @@
           <label>tile</label>
           <span id="paletteStatus" style="font-size:12px;color:#667085;margin-left:8px">编辑全局调色板</span>
           <div
+            id="tilePal0"
             class="tool"
             onclick="paletteClick(this,'tile','0')"
             style="background-color: rgb(0, 0, 0, 0)"
@@ -179,6 +180,7 @@
             0
           </div>
           <div
+            id="tilePal1"
             class="tool"
             onclick="paletteClick(this,'tile','1')"
             style="background-color: rgb(188, 188, 188)"
@@ -186,6 +188,7 @@
             1
           </div>
           <div
+            id="tilePal2"
             class="tool"
             onclick="paletteClick(this,'tile','2')"
             style="background-color: rgb(124, 124, 124)"
@@ -193,6 +196,7 @@
             2
           </div>
           <div
+            id="tilePal3"
             class="tool"
             onclick="paletteClick(this,'tile','3')"
             style="background-color: rgb(0, 0, 0)"
@@ -202,10 +206,11 @@
         </div>
         <div class="paletteDiv">
           <label>rom</label>
-          <div class="tool" onclick="paletteClick(this,'rom','0')" style="background-color: rgb(255,255,255)">0</div>
-          <div class="tool" onclick="paletteClick(this,'rom','1')" style="background-color: rgb(188, 188, 188)">1</div>
-          <div class="tool" onclick="paletteClick(this,'rom','2')" style="background-color: rgb(124, 124, 124)">2</div>
-          <div class="tool" onclick="paletteClick(this,'rom','3')" style="background-color: rgb(0, 0, 0)">3</div>
+          <span id="romPaletteStatus" style="font-size:12px;color:#667085;margin-left:8px">编辑全局 ROM 调色板</span>
+          <div id="romPal0" class="tool" onclick="paletteClick(this,'rom','0')" style="background-color: rgb(255,255,255)">0</div>
+          <div id="romPal1" class="tool" onclick="paletteClick(this,'rom','1')" style="background-color: rgb(188, 188, 188)">1</div>
+          <div id="romPal2" class="tool" onclick="paletteClick(this,'rom','2')" style="background-color: rgb(124, 124, 124)">2</div>
+          <div id="romPal3" class="tool" onclick="paletteClick(this,'rom','3')" style="background-color: rgb(0, 0, 0)">3</div>
         </div>
       </div>
 

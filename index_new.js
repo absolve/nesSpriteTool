@@ -209,6 +209,7 @@ function init() {
       selectedEditorTileIndex = index    // 记录选中索引（用于高亮）
       selectedSourceIndex = -1           // 清除复制源选择
       printTitle(rowNum)                 // 重绘以显示高亮
+      updateRomPaletteUI()               // 更新 ROM 调色板 UI 显示
     }
   })
 
@@ -444,6 +445,7 @@ function readNesRom(rom) {
       }
     }
     tile.data = temp   // tile.data 为长度为 64 的数组，每个元素 0-3
+    tile.palette = paletteRom.slice()  // 分配独立的调色板副本
     tiles.push(tile)
   }
 
@@ -464,19 +466,21 @@ function readNesRom(rom) {
 
 // ============================================================
 // 绘制 ROM tile 预览区（editor 画布）
-// 遍历所有 tiles 数组，使用 ROM 调色板（paletteRom）渲染
+// 遍历所有 tiles 数组，使用每个 tile 自己的调色板渲染
 // 并在选中的 tile 上绘制蓝色边框高亮
 // ============================================================
 function printTitle(rowNum) {
   let canvas = document.getElementById("editor")
   let ctx = canvas.getContext("2d")
+  
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   // 遍历所有 tile，计算每个 tile 在画布上的位置并绘制
   for (let i = 0; i < tiles.length; i++) {
     let yoffset = parseInt(i / rowNum)
     let xOffset = (i % rowNum) * perSpriteSize + (i % rowNum) * 2
     let yOffset = yoffset * perSpriteSize + yoffset * spriteYOffset
-    tiles[i].drawData(ctx, xOffset, yOffset, paletteRom, 5)
+    tiles[i].drawData(ctx, xOffset, yOffset, tiles[i].palette || paletteRom, 5)
 
     // 高亮当前选中的 ROM tile（蓝色边框）
     if (selectedEditorTileIndex === i) {
@@ -520,7 +524,10 @@ function exportTiles() {
     return
   }
   let data = {
-    tiles: tiles.map((t) => ({ data: t.data })),                            // 所有 tile 的像素数据
+    tiles: tiles.map((t) => ({ 
+      data: t.data, 
+      palette: t.palette ? t.palette.slice() : paletteRom.slice()  // 保存每个 ROM tile 的独立调色板
+    })),                            // 所有 tile 的像素数据
     tileSlots: tileSlots.map((s) =>                                          // 主编辑区布局
       s && s.tile ? {
         tileIndex: tiles.indexOf(s.tile),     // 通过索引引用 tile，避免重复
@@ -560,6 +567,7 @@ function importTilesFile() {
         tiles = obj.tiles.map((tdata) => {
           let tile = new Tile()
           tile.data = Array.isArray(tdata.data) ? tdata.data.slice() : []
+          tile.palette = tdata.palette && Array.isArray(tdata.palette) ? tdata.palette.slice() : paletteRom.slice()  // 恢复每个 ROM tile 的独立调色板
           return tile
         })
       }
@@ -636,6 +644,7 @@ function clearSelectedTile() {
     selectedEditorTileIndex = -1
     printTitle(rowNum)
     drawTileScreen()
+    updateRomPaletteUI()
     return
   }
   alert('没有选中的 tile')
@@ -651,6 +660,7 @@ function deselectEditorTile() {
     curSelectTile = null
     curSelectTileIsRom = false
     printTitle(rowNum)
+    updateRomPaletteUI()
     return
   }
   alert('当前没有选中的 ROM tile')
@@ -685,7 +695,7 @@ function selectPalette(index) {
 }
 
 // ============================================================
-// 更新调色板 UI 显示
+// 更新 tile 调色板 UI 显示
 // 根据选中格子的调色板或全局调色板更新 HTML 中的色块显示
 // ============================================================
 function updatePaletteUI() {
@@ -693,21 +703,46 @@ function updatePaletteUI() {
   let slot = selectedTileIndex >= 0 ? tileSlots[selectedTileIndex] : null
   
   if (slot && slot.palette) {
-    // 显示选中格子的调色板
     statusEl.textContent = '编辑格子 #' + selectedTileIndex + ' 的调色板'
     for (let i = 0; i < 4; i++) {
-      let btn = document.querySelector('.paletteDiv:first-child .tool:nth-child(' + (i + 2) + ')')
+      let btn = document.getElementById('tilePal' + i)
       if (btn) {
         btn.setAttribute('style', 'background-color:' + slot.palette[i])
       }
     }
   } else {
-    // 显示全局调色板
     statusEl.textContent = '编辑全局调色板'
     for (let i = 0; i < 4; i++) {
-      let btn = document.querySelector('.paletteDiv:first-child .tool:nth-child(' + (i + 2) + ')')
+      let btn = document.getElementById('tilePal' + i)
       if (btn) {
         btn.setAttribute('style', 'background-color:' + palette[i])
+      }
+    }
+  }
+}
+
+// ============================================================
+// 更新 ROM 调色板 UI 显示
+// 根据选中 ROM tile 的调色板或全局 ROM 调色板更新 HTML 中的色块显示
+// ============================================================
+function updateRomPaletteUI() {
+  let statusEl = document.getElementById('romPaletteStatus')
+  let tile = selectedEditorTileIndex >= 0 ? tiles[selectedEditorTileIndex] : null
+  
+  if (tile && tile.palette) {
+    statusEl.textContent = '编辑 ROM tile #' + selectedEditorTileIndex + ' 的调色板'
+    for (let i = 0; i < 4; i++) {
+      let btn = document.getElementById('romPal' + i)
+      if (btn) {
+        btn.setAttribute('style', 'background-color:' + tile.palette[i])
+      }
+    }
+  } else {
+    statusEl.textContent = '编辑全局 ROM 调色板'
+    for (let i = 0; i < 4; i++) {
+      let btn = document.getElementById('romPal' + i)
+      if (btn) {
+        btn.setAttribute('style', 'background-color:' + paletteRom[i])
       }
     }
   }
@@ -737,7 +772,15 @@ function paletteClick(node, id, index) {
     drawTileScreen()
   } else if (id === "rom") {
     if (curSelectColor !== null) {
-      paletteRom[index] = curSelectColor
+      if (selectedEditorTileIndex >= 0 && tiles[selectedEditorTileIndex]) {
+        // 如果有选中的 ROM tile，修改该 tile 的调色板
+        let tile = tiles[selectedEditorTileIndex]
+        if (!tile.palette) tile.palette = paletteRom.slice()
+        tile.palette[index] = curSelectColor
+      } else {
+        // 没有选中 ROM tile，修改全局 ROM 调色板
+        paletteRom[index] = curSelectColor
+      }
       node.setAttribute("style", "background-color:" + curSelectColor)
     }
     printTitle(rowNum)
@@ -753,6 +796,7 @@ class Tile {
     this.data = []       // 长度为 64 的数组，按行存储颜色值（0-3）
     this.horizontal = 0  // 水平翻转标志（未使用，drawData 通过参数控制）
     this.vertical = 0    // 垂直翻转标志（未使用，drawData 通过参数控制）
+    this.palette = null  // 独立调色板，为 null 时使用全局 paletteRom
   }
 
   // ============================================================
