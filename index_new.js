@@ -554,19 +554,38 @@ function exportTiles() {
     alert('没有可导出的 tiles')
     return
   }
+  
+  let exportedTiles = tiles.map((t) => ({
+    data: t.data.slice(),
+    palette: t.palette ? t.palette.slice() : paletteRom.slice()
+  }))
+  
+  let exportedTilesMap = new Map()
+  tiles.forEach((t, i) => {
+    exportedTilesMap.set(t, i)
+  })
+  
+  tileSlots.forEach((s) => {
+    if (s && s.tile && !exportedTilesMap.has(s.tile)) {
+      exportedTilesMap.set(s.tile, exportedTiles.length)
+      exportedTiles.push({
+        data: s.tile.data.slice(),
+        palette: s.tile.palette ? s.tile.palette.slice() : paletteRom.slice()
+      })
+    }
+  })
+  
   let data = {
-    tiles: tiles.map((t) => ({
-      data: t.data,
-      palette: t.palette ? t.palette.slice() : paletteRom.slice()  // 保存每个 ROM tile 的独立调色板
-    })),                            // 所有 tile 的像素数据
-    tileSlots: tileSlots.map((s) =>                                          // 主编辑区布局
-      s && s.tile ? {
-        tileIndex: tiles.indexOf(s.tile),     // 通过索引引用 tile，避免重复
+    tiles: exportedTiles,
+    tileSlots: tileSlots.map((s) => {
+      if (!s || !s.tile) return null
+      return {
+        tileIndex: exportedTilesMap.get(s.tile),
         horizontal: !!s.horizontal,
         vertical: !!s.vertical,
-        palette: s.palette ? s.palette.slice() : palette.slice()  // 保存格子的独立调色板
-      } : null
-    ),
+        palette: s.palette ? s.palette.slice() : palette.slice()
+      }
+    }),
     palette: palette,
     paletteRom: paletteRom,
   }
